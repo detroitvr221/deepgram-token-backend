@@ -28,6 +28,7 @@ app.get('/health', (req, res) => {
 
 // Routes
 app.use('/api', require('./routes/tokens'));
+app.use('/api', require('./routes/openai'));
 
 // Error handling middleware
 // eslint-disable-next-line no-unused-vars

@@ -42,9 +42,29 @@ curl -X POST http://localhost:3000/api/deepgram/token \
 
 - Push this directory to GitHub and connect the repo in Railway, or use the Railway CLI.
 - Ensure env vars are set in Railway: `DEEPGRAM_API_KEY`, `API_KEY`, `NODE_ENV=production`.
+ - Ensure env vars are set in Railway: `DEEPGRAM_API_KEY`, `API_KEY`, `OPENAI_API_KEY`, `NODE_ENV=production`.
 
 ## Notes
 
 - Token expires in 30 seconds and is scoped to `listen` and `speak`.
 - In non-production, if `API_KEY` is missing, auth is skipped for local dev.
+
+## OpenAI Chat Endpoint
+
+POST `/api/openai/chat` with your API key header and messages array:
+
+```bash
+curl -X POST http://localhost:3050/api/openai/chat \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $API_KEY" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      {"role":"system","content":"You are a helpful assistant."},
+      {"role":"user","content":"Say hello"}
+    ]
+  }'
+```
+
+Requires `OPENAI_API_KEY` to be set.
 
