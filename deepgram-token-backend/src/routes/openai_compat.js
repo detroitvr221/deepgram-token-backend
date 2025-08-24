@@ -103,6 +103,10 @@ router.post('/openai/v1/chat/completions', textParser, checkApiKey, handleChatCo
 router.post('/v1/chat/completions', textParser, checkApiKey, handleChatCompletion);
 router.post('/openai/chat/completions', textParser, checkApiKey, handleChatCompletion);
 
+// Responses API compatibility: accept JSON or text, convert to responses input
+router.post('/openai/responses', textParser, checkApiKey, handleChatCompletion);
+router.post('/v1/responses', textParser, checkApiKey, handleChatCompletion);
+
 module.exports = router;
 
 

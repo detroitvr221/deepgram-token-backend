@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(
@@ -31,6 +31,7 @@ app.get('/health', (req, res) => {
 app.use('/api', require('./routes/tokens'));
 app.use('/api', require('./routes/openai'));
 app.use('/api', require('./routes/personas'));
+app.use('/api', require('./routes/openai_responses'));
 
 // Compatibility routes mounted at root for clients expecting no /api prefix
 app.use('/', require('./routes/openai_compat'));

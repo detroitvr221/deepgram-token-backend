@@ -68,6 +68,23 @@ curl -X POST http://localhost:3050/api/openai/chat \
 
 Requires `OPENAI_API_KEY` to be set.
 
+## OpenAI Responses Endpoint
+
+POST `/api/openai/responses` using the Responses API, supports personas and either `input` or `messages`:
+
+```bash
+curl -X POST http://localhost:3050/api/openai/responses \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $API_KEY" \
+  -d '{
+    "personaId": "guidance_counselor",
+    "input": "Say hello in one sentence",
+    "model": "gpt-4o-mini"
+  }'
+```
+
+Compatibility routes (no /api prefix) also available: `/openai/responses`, `/v1/responses`.
+
 ## Personas
 
 List personas (requires API key header):
