@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "PORT=${PORT:-3050} NODE_ENV=development nodemon src/index.js"
   },
   "dependencies": {
     "axios": "^1.7.7",
