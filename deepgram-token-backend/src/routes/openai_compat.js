@@ -1,34 +1,36 @@
 const express = require('express');
-const { checkApiKey } = require('../middleware/auth');
 const OpenAI = require('openai');
+const { checkApiKey } = require('../middleware/auth');
 const { getPersona } = require('../personas/personas');
 
 const router = express.Router();
 
 function createOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
+  if (!apiKey) return null;
   return new OpenAI({ apiKey });
 }
 
-router.post('/openai/chat', checkApiKey, async (req, res) => {
+async function handleChatCompletion(req, res) {
   try {
     const client = createOpenAIClient();
     if (!client) {
-      return res.status(500).json({
-        error: 'Server misconfiguration',
-        message: 'OPENAI_API_KEY is not set',
-      });
+      return res.status(500).json({ error: 'Server misconfiguration', message: 'OPENAI_API_KEY is not set' });
     }
 
-    const { messages, model, temperature, max_tokens, personaId, context } = req.body || {};
+    // Support both our schema and OpenAI SDK schema
+    const body = req.body || {};
+    const messages = body.messages;
+    const model = body.model || 'gpt-4o-mini';
+    const temperature = typeof body.temperature === 'number' ? body.temperature : 0.7;
+    const max_tokens = body.max_tokens;
+    const personaId = body.personaId || body.persona_id || (body.metadata && body.metadata.personaId);
+    const context = body.context || (body.metadata && body.metadata.context);
+
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Invalid request', message: 'messages[] is required' });
     }
 
-    // Compose server-side system prompt from persona
     let composedMessages = messages;
     if (personaId) {
       const persona = getPersona(personaId);
@@ -50,16 +52,15 @@ router.post('/openai/chat', checkApiKey, async (req, res) => {
     }
 
     const response = await client.chat.completions.create({
-      model: model || 'gpt-4o-mini',
+      model,
       messages: composedMessages,
-      temperature: typeof temperature === 'number' ? temperature : 0.7,
+      temperature,
       max_tokens,
     });
 
     const choice = response.choices && response.choices[0];
     const message = choice ? choice.message : null;
-
-    res.json({
+    return res.json({
       reply: message,
       model: response.model,
       usage: response.usage,
@@ -68,10 +69,16 @@ router.post('/openai/chat', checkApiKey, async (req, res) => {
       persona: personaId || null,
     });
   } catch (error) {
-    console.error('OpenAI chat error:', error);
-    res.status(500).json({ error: 'OpenAI request failed', message: error.message });
+    console.error('OpenAI compat error:', error);
+    return res.status(500).json({ error: 'OpenAI request failed', message: error.message });
   }
-});
+}
+
+// Compatibility aliases (no /api prefix)
+router.post('/openai/chat', checkApiKey, handleChatCompletion);
+router.post('/openai/v1/chat/completions', checkApiKey, handleChatCompletion);
+router.post('/v1/chat/completions', checkApiKey, handleChatCompletion);
+router.post('/openai/chat/completions', checkApiKey, handleChatCompletion);
 
 module.exports = router;
 

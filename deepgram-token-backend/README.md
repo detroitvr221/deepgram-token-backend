@@ -68,3 +68,27 @@ curl -X POST http://localhost:3050/api/openai/chat \
 
 Requires `OPENAI_API_KEY` to be set.
 
+## Personas
+
+List personas (requires API key header):
+
+```bash
+curl -X GET http://localhost:3050/api/personas \
+  -H "x-api-key: $API_KEY"
+```
+
+Use a persona in chat by passing `personaId` and optional `context`:
+
+```bash
+curl -X POST http://localhost:3050/api/openai/chat \
+  -H "Content-Type: application/json" \
+  -H "x-api-key: $API_KEY" \
+  -d '{
+    "personaId": "guidance_counselor",
+    "context": {"userName":"Alex","goal":"Improve study habits","preferences":["short steps"]},
+    "messages": [
+      {"role":"user","content":"I keep procrastinating—help me plan this week."}
+    ]
+  }'
+```
+

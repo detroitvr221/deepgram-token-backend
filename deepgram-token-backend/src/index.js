@@ -29,6 +29,10 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api', require('./routes/tokens'));
 app.use('/api', require('./routes/openai'));
+app.use('/api', require('./routes/personas'));
+
+// Compatibility routes mounted at root for clients expecting no /api prefix
+app.use('/', require('./routes/openai_compat'));
 
 // Error handling middleware
 // eslint-disable-next-line no-unused-vars
