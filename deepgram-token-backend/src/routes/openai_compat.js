@@ -1,5 +1,6 @@
 const express = require('express');
 const OpenAI = require('openai');
+const bodyParser = require('body-parser');
 const { checkApiKey } = require('../middleware/auth');
 const { getPersona } = require('../personas/personas');
 
@@ -11,6 +12,26 @@ function createOpenAIClient() {
   return new OpenAI({ apiKey });
 }
 
+function parseBodyFromMaybeText(req) {
+  if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) {
+    return req.body;
+  }
+  if (typeof req.body === 'string') {
+    const raw = req.body.trim();
+    const firstBrace = raw.indexOf('{');
+    const lastBrace = raw.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      const jsonSlice = raw.slice(firstBrace, lastBrace + 1);
+      try {
+        return JSON.parse(jsonSlice);
+      } catch (_) {
+        // fall through
+      }
+    }
+  }
+  return null;
+}
+
 async function handleChatCompletion(req, res) {
   try {
     const client = createOpenAIClient();
@@ -19,7 +40,8 @@ async function handleChatCompletion(req, res) {
     }
 
     // Support both our schema and OpenAI SDK schema
-    const body = req.body || {};
+    const parsed = parseBodyFromMaybeText(req);
+    const body = parsed || {};
     const messages = body.messages;
     const model = body.model || 'gpt-4o-mini';
     const temperature = typeof body.temperature === 'number' ? body.temperature : 0.7;
@@ -74,11 +96,12 @@ async function handleChatCompletion(req, res) {
   }
 }
 
-// Compatibility aliases (no /api prefix)
-router.post('/openai/chat', checkApiKey, handleChatCompletion);
-router.post('/openai/v1/chat/completions', checkApiKey, handleChatCompletion);
-router.post('/v1/chat/completions', checkApiKey, handleChatCompletion);
-router.post('/openai/chat/completions', checkApiKey, handleChatCompletion);
+// Compatibility aliases (no /api prefix). Use text parser to accept malformed JSON bodies.
+const textParser = bodyParser.text({ type: '*/*', limit: '1mb' });
+router.post('/openai/chat', textParser, checkApiKey, handleChatCompletion);
+router.post('/openai/v1/chat/completions', textParser, checkApiKey, handleChatCompletion);
+router.post('/v1/chat/completions', textParser, checkApiKey, handleChatCompletion);
+router.post('/openai/chat/completions', textParser, checkApiKey, handleChatCompletion);
 
 module.exports = router;
 

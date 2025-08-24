@@ -19,7 +19,8 @@ app.use(
   })
 );
 
-app.use(express.json());
+// Parse JSON for /api routes, but some compatibility routes accept text bodies
+app.use(express.json({ limit: '1mb' }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
